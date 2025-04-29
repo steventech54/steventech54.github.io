@@ -1,1 +1,54 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatwall</title>
+</head>
+<body>
+  <h1>Chatwall</h1>
+  <form id="chatForm">
+    <input type="text" id="nama" placeholder="Nama" required>
+    <textarea id="pesan" placeholder="Tulis pesan" required></textarea>
+    <button type="submit">Kirim Pesan</button>
+  </form>
+
+  <div id="chatMessages">
+    <!-- Pesan chat akan ditampilkan di sini -->
+  </div>
+
+  <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+  <script>
+    // Setup Pusher
+    const pusher = new Pusher('YOUR_APP_KEY', {
+      cluster: 'YOUR_APP_CLUSTER'
+    });
+
+    const channel = pusher.subscribe('chat-channel');
+    channel.bind('new-message', function(data) {
+      const chatMessages = document.getElementById('chatMessages');
+      chatMessages.innerHTML += `<p><strong>${data.nama}:</strong> ${data.pesan}</p>`;
+    });
+
+    // Kirim pesan menggunakan fetch API
+    const form = document.getElementById('chatForm');
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const nama = document.getElementById('nama').value;
+      const pesan = document.getElementById('pesan').value;
+
+      fetch('/.netlify/functions/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama, pesan })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Pesan terkirim:', data);
+      })
+      .catch(error => console.error('Error:', error));
+    });
+  </script>
+</body>
+</html>
